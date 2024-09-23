@@ -61,13 +61,6 @@ func (jqs *JobQueueService) start(ctx context.Context, workers int) {
 
 func (jqs *JobQueueService) Enqueue(job Job) {
 	jqs.jobs <- job
-	// todo think about handling overflow capacity
-	//select {
-	//case jqs.jobs <- job:
-	//	return nil
-	//default:
-	//	return ErrJobQueueIsFull
-	//}
 }
 
 func (jqs *JobQueueService) ScheduleJob(job Job, delay time.Duration) {
