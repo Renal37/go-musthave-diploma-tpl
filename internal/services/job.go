@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	ErrJobQueueIsFull = errors.New("job queue is full")
+	ErrJobsIsFull = errors.New("job queue is full")
 )
 
 // Job представляет собой функцию, выполняющуюся в очереди заданий.
 type Job func(ctx context.Context)
 
-// JobQueueService предоставляет функционал для управления очередью заданий.
-type JobQueueService struct {
+// JobsService предоставляет функционал для управления очередью заданий.
+type JobsService struct {
 	jobs    chan Job       // Канал для очереди заданий.
 	resume  chan struct{}  // Канал для возобновления выполнения заданий после паузы.
 	paused  int32          // Флаг состояния паузы (1 - приостановлено, 0 - активно).
@@ -25,13 +25,13 @@ type JobQueueService struct {
 	closing int32          // Флаг закрытия очереди (1 - закрыта, 0 - активно).
 }
 
-// NewJobQueueService создает новый экземпляр JobQueueService.
+// NewJobsService создает новый экземпляр JobsService.
 // Параметры:
 // - ctx: контекст для управления временем жизни сервиса.
 // - capacity: емкость очереди заданий.
 // - workers: количество воркеров, обрабатывающих задания.
-func NewJobQueueService(ctx context.Context, capacity, workers int) *JobQueueService {
-	service := &JobQueueService{
+func NewJobsService(ctx context.Context, capacity, workers int) *JobsService {
+	service := &JobsService{
 		jobs:   make(chan Job, capacity),
 		resume: make(chan struct{}),
 	}
@@ -41,7 +41,7 @@ func NewJobQueueService(ctx context.Context, capacity, workers int) *JobQueueSer
 }
 
 // start запускает заданное количество воркеров для обработки заданий.
-func (jqs *JobQueueService) start(ctx context.Context, workers int) {
+func (jqs *JobsService) start(ctx context.Context, workers int) {
 	for i := 0; i < workers; i++ {
 		jqs.wg.Add(1)
 
@@ -73,25 +73,25 @@ func (jqs *JobQueueService) start(ctx context.Context, workers int) {
 	}
 }
 
-func (jqs *JobQueueService) Enqueue(job Job) {
+func (jqs *JobsService) Enqueue(job Job) {
 	jqs.jobs <- job
 }
 
-func (jqs *JobQueueService) ScheduleJob(job Job, delay time.Duration) {
+func (jqs *JobsService) ScheduleJob(job Job, delay time.Duration) {
 	time.AfterFunc(delay, func() {
 		jqs.jobs <- job
 	})
 }
 
 // Pause приостанавливает выполнение заданий.
-func (jqs *JobQueueService) Pause() {
+func (jqs *JobsService) Pause() {
 	if atomic.CompareAndSwapInt32(&jqs.paused, 0, 1) {
 		// Пауза была активирована.
 	}
 }
 
 // Resume возобновляет выполнение заданий после паузы.
-func (jqs *JobQueueService) Resume() {
+func (jqs *JobsService) Resume() {
 	if atomic.CompareAndSwapInt32(&jqs.paused, 1, 0) {
 		jqs.mu.Lock()
 		defer jqs.mu.Unlock()
@@ -103,7 +103,7 @@ func (jqs *JobQueueService) Resume() {
 }
 
 // PauseAndResume приостанавливает выполнение заданий на заданный промежуток времени, а затем возобновляет.
-func (jqs *JobQueueService) PauseAndResume(delay time.Duration) {
+func (jqs *JobsService) PauseAndResume(delay time.Duration) {
 	jqs.Pause()
 	time.AfterFunc(delay, func() {
 		jqs.Resume()
@@ -112,7 +112,7 @@ func (jqs *JobQueueService) PauseAndResume(delay time.Duration) {
 
 // Shutdown корректно завершает работу очереди заданий.
 // Закрывает канал заданий и ожидает завершения всех воркеров.
-func (jqs *JobQueueService) Shutdown() {
+func (jqs *JobsService) Shutdown() {
 	if atomic.CompareAndSwapInt32(&jqs.closing, 0, 1) {
 		// Закрытие канала заданий.
 		close(jqs.jobs)

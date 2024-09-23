@@ -18,9 +18,9 @@ import (
 
 // AccrualService представляет сервис для обработки начислений.
 type AccrualService struct {
-	storage          accrualStorage         // Хранилище для работы с данными начислений.
-	jobQueueService  accrualJobQueueService // Сервис очереди задач для управления заданиями.
-	externalEndpoint string                 // Внешний endpoint для получения данных начислений.
+	storage          accrualStorage     // Хранилище для работы с данными начислений.
+	JobsService      accrualJobsService // Сервис очереди задач для управления заданиями.
+	externalEndpoint string             // Внешний endpoint для получения данных начислений.
 }
 
 // Интерфейс для хранилища начислений.
@@ -31,17 +31,17 @@ type accrualStorage interface {
 }
 
 // Интерфейс для сервиса очереди задач начислений.
-type accrualJobQueueService interface {
+type accrualJobsService interface {
 	Enqueue(job Job)                          // Добавление задания в очередь.
 	ScheduleJob(job Job, delay time.Duration) // Планирование задания с задержкой.
 	PauseAndResume(delay time.Duration)       // Приостановка и возобновление обработки заданий.
 }
 
 // Конструктор для создания нового экземпляра AccrualService.
-func NewAccrualService(storage accrualStorage, jobQueueService accrualJobQueueService, externalEndpoint string) *AccrualService {
+func NewAccrualService(storage accrualStorage, JobsService accrualJobsService, externalEndpoint string) *AccrualService {
 	return &AccrualService{
 		storage:          storage,
-		jobQueueService:  jobQueueService,
+		JobsService:      JobsService,
 		externalEndpoint: externalEndpoint,
 	}
 }
@@ -49,7 +49,7 @@ func NewAccrualService(storage accrualStorage, jobQueueService accrualJobQueueSe
 // CalculateAccrual инициирует процесс расчета начислений для указанного заказа.
 func (as *AccrualService) CalculateAccrual(orderID string) {
 	// Добавляем задание в очередь для обработки начислений.
-	as.jobQueueService.Enqueue(func(ctx context.Context) {
+	as.JobsService.Enqueue(func(ctx context.Context) {
 		data, retryAfter, err := as.fetchAccrualData(orderID)
 
 		if err != nil {
@@ -66,8 +66,8 @@ func (as *AccrualService) CalculateAccrual(orderID string) {
 
 		if retryAfter > 0 {
 			logger.Log.Info("Получен Retry-After", zap.Int("retryAfter", retryAfter), zap.String("orderID", orderID))
-			as.jobQueueService.PauseAndResume(time.Second * time.Duration(retryAfter))
-			as.jobQueueService.Enqueue(func(ctx context.Context) {
+			as.JobsService.PauseAndResume(time.Second * time.Duration(retryAfter))
+			as.JobsService.Enqueue(func(ctx context.Context) {
 				as.CalculateAccrual(orderID)
 			})
 			logger.Log.Info("Добавлено новое задание после паузы", zap.Int("retryAfter", retryAfter), zap.String("orderID", orderID))
@@ -82,7 +82,7 @@ func (as *AccrualService) CalculateAccrual(orderID string) {
 		switch data.Status {
 		case AccrualStatusRegistered:
 			// Планируем новое задание через минуту.
-			as.jobQueueService.ScheduleJob(func(ctx context.Context) {
+			as.JobsService.ScheduleJob(func(ctx context.Context) {
 				as.CalculateAccrual(orderID)
 			}, time.Minute)
 			logger.Log.Info("Добавлено запланированное задание", zap.String("orderID", orderID))

@@ -12,7 +12,6 @@ import (
 	"github.com/Renal37/go-musthave-diploma-tpl/internal/utils"
 )
 
-
 func main() {
 	// Создание контекста приложения
 	ctx := context.Background()
@@ -39,10 +38,10 @@ func main() {
 	log.Printf("Сервер запущен на %s\n", config.endpoint)
 
 	// Создание сервиса очереди задач с ограничением на 100 задач и 5 воркерами
-	jobQueueService := services.NewJobQueueService(ctx, 100, 5)
+	JobsService := services.NewJobsService(ctx, 100, 5)
 
 	// Создание сервиса начислений с подключением к базе данных и сервису очереди задач
-	accrualService := services.NewAccrualService(db, jobQueueService, config.accrualEndpoint)
+	accrualService := services.NewAccrualService(db, JobsService, config.accrualEndpoint)
 
 	// Запуск процесса расчета начислений
 	if err := accrualService.StartCalculationAccruals(ctx); err != nil {
@@ -52,7 +51,7 @@ func main() {
 	// Обработка сигналов завершения процесса (например, SIGINT, SIGTERM)
 	utils.HandleTerminationProcess(func() {
 		// Корректное завершение работы очереди задач
-		jobQueueService.Shutdown()
+		JobsService.Shutdown()
 	})
 
 	// Создание и запуск роутера с необходимыми сервисами
