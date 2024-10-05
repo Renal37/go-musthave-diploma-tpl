@@ -142,7 +142,7 @@ func (d *Database) FindOrder(ctx context.Context, orderID string) (*OrderDB, err
 // Поиск всех заказов пользователя с начислениями
 func (d *Database) FindOrdersWithAccrual(ctx context.Context, userID string) (*[]OrderWithAccrualDB, error) {
 	var result []OrderWithAccrualDB
-
+	
 	rows, err := d.db.Query(ctx, SelectOrdersWithAccrualQuery, userID)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка поиска заказов с начислениями: %w", err)
