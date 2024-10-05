@@ -36,23 +36,32 @@ func NewConfig() Config {
 		authSecretKey   string
 	)
 
+	// Чтение флагов
 	flag.StringVar(&endpoint, "a", "localhost:8090", "address and port to run server")
 	flag.StringVar(&accrualEndpoint, "r", "http://localhost:8080", "address and port to accrual run server")
 	flag.StringVar(&dsn, "d", "", "data source name for database connection")
 	flag.Parse()
 
-	if address := os.Getenv("RUN_ADDRESS"); address != "" {
-		endpoint = address
+	// Переменные окружения переопределяются только если флаги не заданы
+	if endpoint == "localhost:8090" { // Если флаг не был установлен
+		if address := os.Getenv("RUN_ADDRESS"); address != "" {
+			endpoint = address
+		}
 	}
 
-	if accrualAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS"); accrualAddress != "" {
-		accrualEndpoint = accrualAddress
+	if accrualEndpoint == "http://localhost:8080" {
+		if accrualAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS"); accrualAddress != "" {
+			accrualEndpoint = accrualAddress
+		}
 	}
 
-	if d := os.Getenv("DATABASE_URI"); d != "" {
-		dsn = d
+	if dsn == "" {
+		if d := os.Getenv("DATABASE_URI"); d != "" {
+			dsn = d
+		}
 	}
 
+	// Логика для logLevel, env и authSecretKey
 	if l := os.Getenv("LOG_LEVEL"); l != "" {
 		logLevel = l
 	} else {
