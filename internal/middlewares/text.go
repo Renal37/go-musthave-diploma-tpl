@@ -37,14 +37,11 @@ func TextMiddleware(next http.Handler) http.Handler {
 }
 
 // GetParsedTextData извлекает текстовые данные из контекста запроса.
-// В случае ошибки возвращает HTTP 500 и пустую строку.
-func GetParsedTextData(w http.ResponseWriter, r *http.Request) string {
+// Возвращает ошибку, если данные не найдены.
+func GetParsedTextData(r *http.Request) (string, error) {
 	data, ok := r.Context().Value(parsedTextDataField).(string)
-
 	if !ok {
-		http.Error(w, "Не удалось извлечь данные из контекста", http.StatusInternalServerError)
-		return ""
+		return "", fmt.Errorf("не удалось извлечь данные из контекста")
 	}
-
-	return data
+	return data, nil
 }
