@@ -46,15 +46,15 @@ func ServiceInjectorMiddleware(
 
 // GetServiceFromContext - извлекает сервис из контекста по заданному ключу.
 // В случае ошибки возвращает HTTP 500 и сообщение об ошибке.
-func GetServiceFromContext[Service any](w http.ResponseWriter, r *http.Request, serviceKey key) (Service, error) {
+func GetServiceFromContext[Service interface{}](w http.ResponseWriter, r *http.Request, serviceKey key) *Service {
 	// Извлекаем сервис из контекста по ключу
-	var service Service
-	if serviceValue := r.Context().Value(serviceKey); serviceValue == nil {
+	foundService, ok := r.Context().Value(serviceKey).(Service)
+
+	if !ok {
 		// Если сервис не найден, возвращаем ошибку
-		return service, fmt.Errorf("сервис не найден в контексте по ключу %d", serviceKey)
-	} else if service, ok := serviceValue.(Service); !ok {
-		// Если сервис не приведён к нужному типу, возвращаем ошибку
-		return service, fmt.Errorf("сервис имеет неправильный тип для ключа %d", serviceKey)
+		http.Error(w, fmt.Sprintf("Сервис не найден в контексте по ключу %v", serviceKey), http.StatusInternalServerError)
+		return nil
 	}
-	return service, nil
+
+	return &foundService
 }

@@ -23,20 +23,11 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Получаем сервисы заказа и начислений из контекста запроса.
-	orderService, err := middlewares.GetServiceFromContext[models.OrderService](w, r, middlewares.OrderServiceKey)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	accrualService, err := middlewares.GetServiceFromContext[models.AccrualService](w, r, middlewares.AccrualServiceKey)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	orderService := middlewares.GetServiceFromContext[models.OrderService](w, r, middlewares.OrderServiceKey)
+	accrualService := middlewares.GetServiceFromContext[models.AccrualService](w, r, middlewares.AccrualServiceKey)
 
 	// Проверяем валидность идентификатора заказа.
-	if !orderService.VerifyOrderID(orderID) {
+	if !(*orderService).VerifyOrderID(orderID) {
 		http.Error(w, "Идентификатор заказа недействителен", http.StatusUnprocessableEntity)
 		return
 	}
@@ -45,47 +36,43 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	user := middlewares.GetUserFromContext(w, r)
 
 	// Пытаемся создать новый заказ.
-	createOrderErr := orderService.CreateOrder(r.Context(), orderID, user.ID)
-	if createOrderErr != nil {
+	err := (*orderService).CreateOrder(r.Context(), orderID, user.ID)
+	if err != nil {
 		// Обрабатываем ошибку дублирования заказа для того же пользователя.
-		if errors.Is(createOrderErr, services.ErrDuplicateOrderByOriginalUser) {
+		if errors.Is(err, services.ErrDuplicateOrderByOriginalUser) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 
 		// Обрабатываем ошибку дублирования заказа другим пользователем.
-		if errors.Is(createOrderErr, services.ErrDuplicateOrder) {
+		if errors.Is(err, services.ErrDuplicateOrder) {
 			http.Error(w, "Этот заказ уже был создан другим пользователем", http.StatusConflict)
 			return
 		}
 
 		// Обрабатываем другие возможные ошибки при создании заказа.
-		http.Error(w, fmt.Sprintf("Произошла ошибка при создании заказа: %s", createOrderErr.Error()), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Произошла ошибка при создании заказа: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 
 	// Инициируем расчет начислений для созданного заказа.
-	accrualService.CalculateAccrual(orderID)
+	(*accrualService).CalculateAccrual(orderID)
 
 	// Отправляем статус принятия запроса.
 	w.WriteHeader(http.StatusAccepted)
 }
 
-
 // GetOrders обрабатывает HTTP-запрос на получение списка заказов пользователя.
 // Метод извлекает идентификатор пользователя из контекста, получает список заказов и возвращает его в формате JSON.
 func GetOrders(w http.ResponseWriter, r *http.Request) {
 	// Получаем сервис заказа из контекста запроса.
-	orderService ,err:= middlewares.GetServiceFromContext[models.OrderService](w, r, middlewares.OrderServiceKey)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	orderService := middlewares.GetServiceFromContext[models.OrderService](w, r, middlewares.OrderServiceKey)
+
 	// Получаем информацию о текущем пользователе из контекста запроса.
 	user := middlewares.GetUserFromContext(w, r)
 
 	// Пытаемся получить список заказов пользователя.
-	orders, err := orderService.GetOrders(r.Context(), user.ID)
+	orders, err := (*orderService).GetOrders(r.Context(), user.ID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Произошла ошибка при получении заказов: %s", err.Error()), http.StatusInternalServerError)
 		return
