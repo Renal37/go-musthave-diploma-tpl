@@ -37,7 +37,11 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Получаем информацию о текущем пользователе из контекста запроса.
-	user := middlewares.GetUserFromContext(w, r)
+	user,err := middlewares.GetUserFromContext(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	// Пытаемся создать новый заказ.
 	createOrderErr := (*orderService).CreateOrder(r.Context(), orderID, user.ID)
@@ -73,7 +77,11 @@ func GetOrders(w http.ResponseWriter, r *http.Request) {
 	orderService := middlewares.GetServiceFromContext[models.OrderService](w, r, middlewares.OrderServiceKey)
 
 	// Получаем информацию о текущем пользователе из контекста запроса.
-	user := middlewares.GetUserFromContext(w, r)
+	user,err := middlewares.GetUserFromContext(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	// Пытаемся получить список заказов пользователя.
 	orders, err := (*orderService).GetOrders(r.Context(), user.ID)

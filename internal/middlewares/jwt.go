@@ -46,6 +46,7 @@ func (a *AuthMiddlewareConfig) Middleware(next http.Handler) http.Handler {
 
 		// Извлекаем сервисы аутентификации и JWT из контекста запроса.
 		authService := GetServiceFromContext[models.AuthService](w, r, AuthServiceKey)
+
 		jwtService := GetServiceFromContext[models.JWTService](w, r, JwtServiceKey)
 
 		// Получаем заголовок Authorization.
@@ -110,14 +111,11 @@ func (a *AuthMiddlewareConfig) Middleware(next http.Handler) http.Handler {
 }
 
 // GetUserFromContext извлекает информацию о пользователе из контекста запроса.
-// В случае ошибки возвращает HTTP 500 и nil.
-func GetUserFromContext(w http.ResponseWriter, r *http.Request) *models.User {
+// В случае ошибки возвращает nil и ошибку.
+func GetUserFromContext(r *http.Request) (*models.User, error) {
 	user, ok := r.Context().Value(userField).(*models.User)
-
 	if !ok {
-		http.Error(w, "Не удалось получить пользователя из контекста", http.StatusInternalServerError)
-		return nil
+		return nil, errors.New("не удалось получить пользователя из контекста")
 	}
-
-	return user
+	return user, nil
 }

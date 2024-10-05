@@ -11,7 +11,11 @@ import (
 // GetBalance получает баланс авторизованного пользователя
 func GetBalance(w http.ResponseWriter, r *http.Request) {
 	balanceService := middlewares.GetServiceFromContext[models.BalanceService](w, r, middlewares.BalanceServiceKey)
-	user := middlewares.GetUserFromContext(w, r)
+	user,err := middlewares.GetUserFromContext(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	balance, err := (*balanceService).GetUserBalance(r.Context(), user.ID)
 
@@ -45,7 +49,11 @@ func CreateWithdrawal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := middlewares.GetUserFromContext(w, r)
+	user,err := middlewares.GetUserFromContext(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	balance, err := (*balanceService).GetUserBalance(r.Context(), user.ID)
 
 	if err != nil {
@@ -69,7 +77,11 @@ func CreateWithdrawal(w http.ResponseWriter, r *http.Request) {
 // GetWithdrawals получает историю выплат авторизованного пользователя
 func GetWithdrawals(w http.ResponseWriter, r *http.Request) {
 	balanceService := middlewares.GetServiceFromContext[models.BalanceService](w, r, middlewares.BalanceServiceKey)
-	user := middlewares.GetUserFromContext(w, r)
+	user,err := middlewares.GetUserFromContext(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	withdrawalFlow, err := (*balanceService).GetWithdrawalFlow(r.Context(), user.ID)
 
