@@ -10,10 +10,14 @@ import (
 
 // GetBalance получает баланс авторизованного пользователя
 func GetBalance(w http.ResponseWriter, r *http.Request) {
-	balanceService := middlewares.GetServiceFromContext[models.BalanceService](w, r, middlewares.BalanceServiceKey)
+	balanceService,err := middlewares.GetServiceFromContext[models.BalanceService](w, r, middlewares.BalanceServiceKey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	user := middlewares.GetUserFromContext(w, r)
 
-	balance, err := (*balanceService).GetUserBalance(r.Context(), user.ID)
+	balance, err := balanceService.GetUserBalance(r.Context(), user.ID)
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("При получении баланса произошла ошибка: %s", err.Error()), http.StatusInternalServerError)
@@ -37,16 +41,24 @@ func CreateWithdrawal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderService := middlewares.GetServiceFromContext[models.OrderService](w, r, middlewares.OrderServiceKey)
-	balanceService := middlewares.GetServiceFromContext[models.BalanceService](w, r, middlewares.BalanceServiceKey)
+	orderService ,err:= middlewares.GetServiceFromContext[models.OrderService](w, r, middlewares.OrderServiceKey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	balanceService,err := middlewares.GetServiceFromContext[models.BalanceService](w, r, middlewares.BalanceServiceKey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	if !(*orderService).VerifyOrderID(*data.ID) {
+	if !orderService.VerifyOrderID(*data.ID) {
 		http.Error(w, "Номер заказа неверный", http.StatusUnprocessableEntity)
 		return
 	}
 
 	user := middlewares.GetUserFromContext(w, r)
-	balance, err := (*balanceService).GetUserBalance(r.Context(), user.ID)
+	balance, err := balanceService.GetUserBalance(r.Context(), user.ID)
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("При получении баланса произошла ошибка: %s", err.Error()), http.StatusInternalServerError)
@@ -58,7 +70,7 @@ func CreateWithdrawal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := (*balanceService).CreateWithdrawal(r.Context(), *data.ID, user.ID, *data.Sum); err != nil {
+	if err := balanceService.CreateWithdrawal(r.Context(), *data.ID, user.ID, *data.Sum); err != nil {
 		http.Error(w, fmt.Sprintf("При создании выплаты произошла ошибка: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
@@ -68,10 +80,14 @@ func CreateWithdrawal(w http.ResponseWriter, r *http.Request) {
 
 // GetWithdrawals получает историю выплат авторизованного пользователя
 func GetWithdrawals(w http.ResponseWriter, r *http.Request) {
-	balanceService := middlewares.GetServiceFromContext[models.BalanceService](w, r, middlewares.BalanceServiceKey)
+	balanceService,err := middlewares.GetServiceFromContext[models.BalanceService](w, r, middlewares.BalanceServiceKey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	user := middlewares.GetUserFromContext(w, r)
 
-	withdrawalFlow, err := (*balanceService).GetWithdrawalFlow(r.Context(), user.ID)
+	withdrawalFlow, err := balanceService.GetWithdrawalFlow(r.Context(), user.ID)
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("При получении истории выплат произошла ошибка: %s", err.Error()), http.StatusInternalServerError)

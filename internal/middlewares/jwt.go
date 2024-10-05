@@ -45,8 +45,17 @@ func (a *AuthMiddlewareConfig) Middleware(next http.Handler) http.Handler {
 		}
 
 		// Извлекаем сервисы аутентификации и JWT из контекста запроса.
-		authService := GetServiceFromContext[models.AuthService](w, r, AuthServiceKey)
-		jwtService := GetServiceFromContext[models.JWTService](w, r, JwtServiceKey)
+		authService, err := GetServiceFromContext[models.AuthService](w, r, AuthServiceKey)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		jwtService, err := GetServiceFromContext[models.JWTService](w, r, JwtServiceKey)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		// Получаем заголовок Authorization.
 		authHeader := r.Header.Get("Authorization")
@@ -65,7 +74,7 @@ func (a *AuthMiddlewareConfig) Middleware(next http.Handler) http.Handler {
 		}
 
 		// Валидируем токен с помощью JWT-сервиса.
-		token, err := (*jwtService).ValidateToken(tokenString)
+		token, err := jwtService.ValidateToken(tokenString)
 		if err != nil {
 			// Обрабатываем различные ошибки валидации токена.
 			if errors.Is(err, services.ErrTokenIsInvalid) {
@@ -91,7 +100,7 @@ func (a *AuthMiddlewareConfig) Middleware(next http.Handler) http.Handler {
 		}
 
 		// Получаем пользователя из базы данных по логину.
-		user, err := (*authService).GetUser(r.Context(), login)
+		user, err := authService.GetUser(r.Context(), login)
 		if err != nil {
 			// Обрабатываем ошибку, если пользователь не найден.
 			if errors.Is(err, services.ErrUserIsNotExist) {

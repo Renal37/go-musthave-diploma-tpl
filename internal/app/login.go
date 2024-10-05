@@ -16,8 +16,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	data := middlewares.GetParsedJSONData[models.UnknownUser](w, r)
 
 	// Получаем сервисы аутентификации и JWT из контекста запроса.
-	authService := middlewares.GetServiceFromContext[models.AuthService](w, r, middlewares.AuthServiceKey)
-	jwtService := middlewares.GetServiceFromContext[models.JWTService](w, r, middlewares.JwtServiceKey)
+	authService,err := middlewares.GetServiceFromContext[models.AuthService](w, r, middlewares.AuthServiceKey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	jwtService,err := middlewares.GetServiceFromContext[models.JWTService](w, r, middlewares.JwtServiceKey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	// Проверяем, что запрос содержит логин и пароль.
 	if ok := IsUnknownUserDataValid(data); !ok {
@@ -26,7 +34,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Пытаемся аутентифицировать пользователя.
-	if err := (*authService).Login(r.Context(), data); err != nil {
+	if err := authService.Login(r.Context(), data); err != nil {
 		// Обрабатываем ошибку, если пользователь не существует.
 		if errors.Is(err, services.ErrUserIsNotExist) {
 			http.Error(w, fmt.Sprintf("Пользователь с логином %s не существует", *data.Login), http.StatusUnauthorized)
@@ -45,7 +53,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Генерируем JWT токен для успешной аутентификации.
-	token, err := (*jwtService).GenerateJWT(*data.Login)
+	token, err := jwtService.GenerateJWT(*data.Login)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Ошибка при генерации JWT токена: %s", err.Error()), http.StatusInternalServerError)
 		return
