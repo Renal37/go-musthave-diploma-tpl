@@ -44,14 +44,14 @@ func TestRegisterRoute(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			testName:        "Должен_вернуть_ошибку_валидации_из_за_отсутствия_тела_запроса",
+			testName:        "Должен вернуть ошибку валидации из-за отсутствия тела запроса",
 			methodName:      "POST",
 			targetURL:       "/api/user/register",
 			expectedCode:    http.StatusBadRequest,
-			expectedMessage: "Ошибка_при_разбореданных_JSON:_unexpected_end_of_JSON_input\n",
+			expectedMessage: "Ошибка при разборе данных JSON: unexpected end of JSON input\n",
 		},
 		{
-			testName:   "Должен_вернуть_ошибку_валидации_из-за_отсутствия_логина_пользователя",
+			testName:   "Должен вернуть ошибку валидации из-за отсутствия логина пользователя",
 			methodName: "POST",
 			targetURL:  "/api/user/register",
 			body: func() io.Reader {
@@ -60,10 +60,10 @@ func TestRegisterRoute(t *testing.T) {
 				return bytes.NewBuffer(data)
 			},
 			expectedCode:    http.StatusBadRequest,
-			expectedMessage: "Запрос_не_содержит_логин_или_пароль\n",
+			expectedMessage: "Запрос не содержит логин или пароль\n",
 		},
 		{
-			testName:   "Должен_вернуть_ошибку_валидации_из-за_отсутствия_пароля_пользователя",
+			testName:   "Должен вернуть ошибку валидации из-за отсутствия пароля пользователя",
 			methodName: "POST",
 			targetURL:  "/api/user/register",
 			body: func() io.Reader {
@@ -75,7 +75,7 @@ func TestRegisterRoute(t *testing.T) {
 			expectedMessage: "Запрос не содержит логин или пароль\n",
 		},
 		{
-			testName:   "Должен_вернуть_ошибку,_если_пользователь_уже_зарегистрирован",
+			testName:   "Должен вернуть ошибку, если пользователь уже зарегистрирован",
 			methodName: "POST",
 			targetURL:  "/api/user/register",
 			test: func(t *testing.T) {
@@ -94,10 +94,10 @@ func TestRegisterRoute(t *testing.T) {
 				return bytes.NewBuffer(data)
 			},
 			expectedCode:    http.StatusConflict,
-			expectedMessage: "Пользователь_уже_зарегистрирован\n",
+			expectedMessage: "Пользователь уже зарегистрирован\n",
 		},
 		{
-			testName:   "Должен_зарегистрировать_пользователя",
+			testName:   "Должен зарегистрировать пользователя",
 			methodName: "POST",
 			targetURL:  "/api/user/register",
 			test: func(t *testing.T) {
@@ -181,14 +181,14 @@ func TestLoginRoute(t *testing.T) {
 		testHeader      func(t *testing.T, header http.Header)
 	}{
 		{
-			testName:        "Должен_вернуть_ошибку_валидации_из-за_отсутствия_тела_запроса",
+			testName:        "Должен вернуть ошибку валидации из-за отсутствия тела запроса",
 			methodName:      "POST",
 			targetURL:       "/api/user/login",
 			expectedCode:    http.StatusBadRequest,
-			expectedMessage: "Ошибка_при_разборе_данных_JSON:_unexpected_end_of_JSON _nput\n",
+			expectedMessage: "Ошибка при разборе данных JSON: unexpected end of JSON input\n",
 		},
 		{
-			testName:   "Должен_вернуть_ошибку_валидации_из-за_отсутствия_логина_пользователя",
+			testName:   "Должен вернуть ошибку валидации из-за отсутствия логина пользователя",
 			methodName: "POST",
 			targetURL:  "/api/user/login",
 			body: func() io.Reader {
@@ -197,10 +197,10 @@ func TestLoginRoute(t *testing.T) {
 				return bytes.NewBuffer(data)
 			},
 			expectedCode:    http.StatusBadRequest,
-			expectedMessage: "Запрос_не_содержит_логин_или_пароль\n",
+			expectedMessage: "Запрос не содержит логин или пароль\n",
 		},
 		{
-			testName:   "Должен_вернуть_ошибку_валидации_из-за_отсутствия_пароля_пользователя",
+			testName:   "Должен вернуть ошибку валидации из-за отсутствия пароля пользователя",
 			methodName: "POST",
 			targetURL:  "/api/user/login",
 			body: func() io.Reader {
@@ -209,10 +209,10 @@ func TestLoginRoute(t *testing.T) {
 				return bytes.NewBuffer(data)
 			},
 			expectedCode:    http.StatusBadRequest,
-			expectedMessage: "Запрос_не_содержит_логин_или_пароль\n",
+			expectedMessage: "Запрос не содержит логин или пароль\n",
 		},
 		{
-			testName:   "Должен_вернуть_ошибку_ если_пользователь_не_существует",
+			testName:   "Должен вернуть ошибку, если пользователь не существует",
 			methodName: "POST",
 			targetURL:  "/api/user/login",
 			test: func(t *testing.T) {
@@ -229,10 +229,10 @@ func TestLoginRoute(t *testing.T) {
 				return bytes.NewBuffer(data)
 			},
 			expectedCode:    http.StatusUnauthorized,
-			expectedMessage: "Пользовател_ с_логином_user_не_существует\n",
+			expectedMessage: "Пользователь с логином user не существует\n",
 		},
 		{
-			testName:   "Должен_вернуть_ошибку,_если_Неверный_пароль",
+			testName:   "Должен вернуть ошибку, если Неверный пароль",
 			methodName: "POST",
 			targetURL:  "/api/user/login",
 			test: func(t *testing.T) {
@@ -249,10 +249,10 @@ func TestLoginRoute(t *testing.T) {
 				return bytes.NewBuffer(data)
 			},
 			expectedCode:    http.StatusUnauthorized,
-			expectedMessage: "Неверный_пароль\n",
+			expectedMessage: "Неверный пароль\n",
 		},
 		{
-			testName:   "Должен_вернуть_заголовок_авторизации",
+			testName:   "Должен вернуть заголовок авторизации",
 			methodName: "POST",
 			targetURL:  "/api/user/login",
 			test: func(t *testing.T) {
@@ -345,7 +345,7 @@ func TestCreateOrderRoute(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			testName:   "Должен_создать_заказ",
+			testName:   "Должен создать заказ",
 			methodName: "POST",
 			targetURL:  "/api/user/orders",
 			test: func(t *testing.T) {
@@ -438,7 +438,7 @@ func TestGerOrdersRoute(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			testName:   "Должен_вернуть_список_заказов",
+			testName:   "Должен вернуть список заказов",
 			methodName: "GET",
 			targetURL:  "/api/user/orders",
 			test: func(t *testing.T) {
@@ -524,7 +524,7 @@ func TestGerBalanceRoute(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			testName:   "Должен_вернуть_баланс_пользователя",
+			testName:   "Должен вернуть баланс пользователя",
 			methodName: "GET",
 			targetURL:  "/api/user/balance",
 			test: func(t *testing.T) {
@@ -605,7 +605,7 @@ func TestCreateWithdrawalRoute(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			testName:   "Должен_создать_вывод_средств",
+			testName:   "Должен создать вывод средств",
 			methodName: "POST",
 			targetURL:  "/api/user/balance/withdraw",
 			test: func(t *testing.T) {
@@ -700,7 +700,7 @@ func TestGetWithdrawalsRoute(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			testName:   "Должен_вернуть_список_выводов_средств",
+			testName:   "Должен вернуть список выводов средств",
 			methodName: "GET",
 			targetURL:  "/api/user/withdrawals",
 			test: func(t *testing.T) {

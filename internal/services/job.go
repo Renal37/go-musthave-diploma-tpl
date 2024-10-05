@@ -19,7 +19,7 @@ type Job func(ctx context.Context)
 // JobQueueService управляет очередью задач и их выполнением
 type JobQueueService struct {
 	jobs   chan Job      // Канал для очереди задач
-	resume chan struct{}  // Канал для возобновления выполнения при паузе
+	resume chan struct{} // Канал для возобновления выполнения при паузе
 	paused int32         // Флаг состояния паузы (0 - работа, 1 - пауза)
 	wg     sync.WaitGroup // Группа ожидания для управления горутинами
 }
@@ -27,16 +27,17 @@ type JobQueueService struct {
 // NewJobQueueService создает новый сервис очереди задач с заданной емкостью и числом рабочих
 func NewJobQueueService(ctx context.Context, capacity, workers int) *JobQueueService {
 	service := &JobQueueService{
-		jobs: make(chan Job, capacity),
+		jobs:   make(chan Job, capacity),
 		resume: make(chan struct{}),
+		wg:     sync.WaitGroup{},
 	}
+	service.start(ctx, workers)
 
-	// Возвращаем инициализированный сервис без запуска
 	return service
 }
 
-// Start запускает рабочих (воркеров), обрабатывающих задачи из очереди
-func (jqs *JobQueueService) Start(ctx context.Context, workers int) {
+// start запускает рабочих (воркеров), обрабатывающих задачи из очереди
+func (jqs *JobQueueService) start(ctx context.Context, workers int) {
 	for i := 0; i < workers; i++ {
 		jqs.wg.Add(1)
 
@@ -69,13 +70,13 @@ func (jqs *JobQueueService) Enqueue(job Job) {
 	jqs.jobs <- job
 }
 
+
 // ScheduleJob планирует выполнение задачи через заданную задержку
 func (jqs *JobQueueService) ScheduleJob(job Job, delay time.Duration) {
 	time.AfterFunc(delay, func() {
 		jqs.jobs <- job
 	})
 }
-
 // Pause приостанавливает выполнение задач
 func (jqs *JobQueueService) Pause() {
 	atomic.StoreInt32(&jqs.paused, 1)
