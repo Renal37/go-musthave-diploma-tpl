@@ -44,11 +44,11 @@ func TestRegisterRoute(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			testName:        "Должен вернуть ошибку валидации из-за отсутствия тела запроса",
+			testName:        "Должен_вернуть_ошибку_валидации_из_за_отсутствия_тела_запроса",
 			methodName:      "POST",
 			targetURL:       "/api/user/register",
 			expectedCode:    http.StatusBadRequest,
-			expectedMessage: "Ошибка при разборе данных JSON: unexpected end of JSON input\n",
+			expectedMessage: "Ошибка_при_разбореданных_JSON:_unexpected_end_of_JSON_input\n",
 		},
 		{
 			testName:   "Должен вернуть ошибку валидации из-за отсутствия логина пользователя",
@@ -524,7 +524,7 @@ func TestGerBalanceRoute(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			testName:   "Должен вернуть баланс пользователя",
+			testName:   "Должен_вернуть_баланс_пользователя",
 			methodName: "GET",
 			targetURL:  "/api/user/balance",
 			test: func(t *testing.T) {
@@ -605,7 +605,7 @@ func TestCreateWithdrawalRoute(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			testName:   "Должен создать вывод средств",
+			testName:   "Должен_создать_вывод_средств",
 			methodName: "POST",
 			targetURL:  "/api/user/balance/withdraw",
 			test: func(t *testing.T) {
@@ -700,7 +700,7 @@ func TestGetWithdrawalsRoute(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			testName:   "Должен вернуть список выводов средств",
+			testName:   "Должен_вернуть_список_выводов_средств",
 			methodName: "GET",
 			targetURL:  "/api/user/withdrawals",
 			test: func(t *testing.T) {
