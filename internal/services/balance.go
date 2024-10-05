@@ -25,17 +25,17 @@ func NewBalanceService(storage balanceStorage) *BalanceService {
 	return &BalanceService{storage: storage}
 }
 
-func (b *BalanceService) GetUserBalance(ctx context.Context, userID string) (models.Balance, error) {
+func (b *BalanceService) GetUserBalance(ctx context.Context, userID string) (*models.Balance, error) {
 	accrualFlow, err := b.storage.FindAccrualFlow(ctx, userID)
 
 	if err != nil {
-		return models.Balance{}, err
+		return &models.Balance{}, err
 	}
 
 	withdrawalFlow, err := b.storage.FindWithdrawalFlow(ctx, userID)
 
 	if err != nil {
-		return models.Balance{}, err
+		return &models.Balance{}, err
 	}
 
 	var current float64 = 0
@@ -53,7 +53,7 @@ func (b *BalanceService) GetUserBalance(ctx context.Context, userID string) (mod
 		}
 	}
 
-	return models.Balance{Current: current - withdrawn, Withdrawn: withdrawn}, nil
+	return &models.Balance{Current: current - withdrawn, Withdrawn: withdrawn}, nil
 }
 
 func (b *BalanceService) CreateWithdrawal(ctx context.Context, orderID, userID string, amount float64) error {
