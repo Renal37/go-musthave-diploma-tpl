@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Renal37/go-musthave-diploma-tpl/internal/logger"
 	"github.com/Renal37/go-musthave-diploma-tpl/internal/middlewares"
 	"github.com/Renal37/go-musthave-diploma-tpl/internal/models"
 	"github.com/go-chi/chi/v5"
@@ -49,16 +48,16 @@ func (router *Router) get() chi.Router {
 
 	// Настройка промежуточного ПО (middleware) для роутера.
 	r.Use(
+		// Логгер для регистрации запросов.
 		// Инжектор сервисов для предоставления сервисов в обработчиках.
 		middlewares.ServiceInjectorMiddleware(
 			router.authService,
 			router.jwtService,
+
 			router.orderService,
 			router.accrualService,
 			router.balanceService,
 		),
-		// Логгер для регистрации запросов.
-		logger.RequestLogger,
 		// Middleware для проверки аутентификации, исключая указанные пути.
 		middlewares.AuthMiddleware().WithExcludedPaths(
 			"/api/user/register",
