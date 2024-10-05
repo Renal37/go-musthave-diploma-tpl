@@ -63,7 +63,7 @@ func GetParsedJSONData[Model ModelParameter](w http.ResponseWriter, r *http.Requ
 }
 
 // EncodeJSONResponse кодирует данные в формат JSON и отправляет их в ответе.
-func EncodeJSONResponse[Model any](w http.ResponseWriter, data Model) {
+func EncodeJSONResponse(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
 
 	resp, err := json.Marshal(data)
